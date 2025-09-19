@@ -5,7 +5,7 @@ import sys # in order to terminate the program
 serverSocket = socket(AF_INET, SOCK_STREAM)
 #Prepare a server socket
 host = '127.0.0.1'
-port = 80
+port = 8888
 serverSocket.bind((host,port))
 
 while True: 
@@ -20,23 +20,30 @@ while True:
 
         #f is requested file path
         filename = message.split()[1]
-        print(f'f:{filename}')
+        print(f'{filename} requested')
         f = open(filename[1:])
         #DEBUG:
-        print(f'{f} requested')
 
         outputdata = f.read()
 
         #Send one HTTP header line into socket
-        #200 OK response here
-        connectionSocket.send('200 ok'.encode())
+        #assemble 200 OK response header
+        header =   ('HTTP/1.1 200 OK\r\n'
+                    'Accept-Ranges: bytes\r\n'
+                   f'Content-Length: {len(outputdata)}\r\n'
+                    'Keep-Alive: timeout = 5, max=100\r\n'
+                    'Connection: Keep-Alive\r\n'
+                    'Content-Type: text/html; charset=UTF-8\r\n')
+        connectionSocket.send(header.encode())
         #DEBUG
         print(f'   200 OK response sent')
+        print(header)
 
         #Send the content of the requested file to the client
         for i in range(0,len(outputdata)):
             connectionSocket.send(outputdata[i].encode())
-            print(f'   \'{outputdata[i]}\'')
+            #DEBUG
+            #print(f'   \'{outputdata[i]}\'')
         connectionSocket.send("\r\n".encode())
 
         connectionSocket.close()
